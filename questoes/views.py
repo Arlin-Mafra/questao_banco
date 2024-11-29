@@ -19,6 +19,7 @@ from django.db.models import FloatField
 from django.db.models.functions import TruncDay, ExtractHour
 from datetime import datetime, timedelta
 from django.db.models import F
+from django.utils import timezone
 
 def criar_questao(request):
     if request.method == 'POST':
@@ -302,14 +303,14 @@ def dashboard(request):
 def relatorios(request):
     # Período selecionado (default: último mês)
     periodo = request.GET.get('periodo', '30')  # dias
-    data_inicio = datetime.now() - timedelta(days=int(periodo))
+    data_inicio = timezone.now() - timedelta(days=int(periodo))
     
     # Evolução diária
     evolucao_diaria = RespostaUsuario.objects.filter(
         usuario=request.user,
         data_resposta__gte=data_inicio
     ).annotate(
-        dia=TruncDay('data_resposta')
+        dia=TruncDay('data_resposta', tzinfo=timezone.get_current_timezone())
     ).values('dia').annotate(
         total=Count('id'),
         corretas=Count('id', filter=Q(esta_correta=True)),
@@ -325,7 +326,7 @@ def relatorios(request):
         usuario=request.user,
         esta_correta=True
     ).annotate(
-        hora=ExtractHour('data_resposta')
+        hora=ExtractHour('data_resposta', tzinfo=timezone.get_current_timezone())
     ).values('hora').annotate(
         total=Count('id')
     ).order_by('-total')[:5]

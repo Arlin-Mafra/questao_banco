@@ -71,8 +71,8 @@ class RespostaUsuario(models.Model):
     questao = models.ForeignKey('Questao', on_delete=models.CASCADE)
     resposta = models.TextField()
     esta_correta = models.BooleanField()
-    data_inicio = models.DateTimeField(auto_now_add=True)
-    data_resposta = models.DateTimeField(auto_now_add=True)
+    data_inicio = models.DateTimeField(default=timezone.now)
+    data_resposta = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = 'Resposta do Usuário'
