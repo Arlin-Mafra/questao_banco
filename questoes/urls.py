@@ -8,5 +8,7 @@ urlpatterns = [
     path('materias/criar/', views.MateriaCriarView.as_view(), name='criar_materia'),
     path('materias/<int:pk>/editar/', views.MateriaEditarView.as_view(), name='editar_materia'),
     path('materias/<int:pk>/deletar/', views.MateriaDeletarView.as_view(), name='deletar_materia'),
-    path('questoes/', views.responder_questoes, name='responder_questoes'),
+    path('responder/', views.responder_questoes, name='responder_questoes'),
+    path('questao/<int:questao_id>/comentario/', views.adicionar_comentario, name='adicionar_comentario'),
+    path('comentario/<int:comentario_id>/deletar/', views.deletar_comentario, name='deletar_comentario'),
 ]

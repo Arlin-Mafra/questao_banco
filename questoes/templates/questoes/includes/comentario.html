@@ -1,0 +1,32 @@
+<div class="comentario mb-3" id="comentario-{{ comentario.id }}">
+    <div class="d-flex">
+        <div class="comentario-avatar me-3">
+            {% if comentario.usuario.profile.avatar %}
+                <img src="{{ comentario.usuario.profile.avatar.url }}" alt="Avatar" class="rounded-circle" width="40" height="40">
+            {% else %}
+                <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    {{ comentario.usuario.username|make_list|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="comentario-conteudo flex-grow-1">
+            <div class="bg-light p-3 rounded position-relative">
+                {% if user.is_superuser %}
+                <button type="button" 
+                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
+                        onclick="deletarComentario({{ comentario.id }})"
+                        title="Deletar comentário">
+                    <i class="bi bi-trash"></i>
+                </button>
+                {% endif %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">{{ comentario.usuario.get_full_name|default:comentario.usuario.username }}</h6>
+                    <small class="text-muted">
+                        {{ comentario.data_criacao|date:"d/m/Y H:i" }}
+                    </small>
+                </div>
+                <p class="mb-0">{{ comentario.texto|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -1,4 +1,7 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class Materia(models.Model):
     nome = models.CharField(max_length=100)
@@ -47,3 +50,35 @@ class QuestaoCertoErrado(models.Model):
     class Meta:
         verbose_name = 'Questão de Certo ou Errado'
         verbose_name_plural = 'Questões de Certo ou Errado'
+
+class RespostaUsuario(models.Model):
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    questao = models.ForeignKey('Questao', on_delete=models.CASCADE)
+    resposta = models.CharField(max_length=10)  # Armazena 'A', 'B', 'C', 'D', 'E' ou 'True'/'False'
+    esta_correta = models.BooleanField()
+    data_resposta = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Resposta do Usuário'
+        verbose_name_plural = 'Respostas dos Usuários'
+        ordering = ['-data_resposta']
+        # Garante que um usuário só tenha uma resposta por questão
+        unique_together = ['usuario', 'questao']
+
+    def __str__(self):
+        return f"{self.usuario.username} - Questão {self.questao.id} - {'Correta' if self.esta_correta else 'Incorreta'}"
+
+class ComentarioQuestao(models.Model):
+    questao = models.ForeignKey('Questao', on_delete=models.CASCADE, related_name='comentarios_questao')
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    texto = models.TextField()
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Comentário'
+        verbose_name_plural = 'Comentários'
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f'Comentário de {self.usuario.username} em {self.data_criacao}'
