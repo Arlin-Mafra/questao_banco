@@ -1,0 +1,60 @@
+/* Estilos para as páginas de autenticação */
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-body {
+    background-color: #ffffff;
+    border-radius: 10px;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border: none;
+    padding: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.form-control {
+    padding: 12px;
+    border-radius: 7px;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,.25);
+    border-color: #86b7fe;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.alert {
+    border-radius: 7px;
+    padding: 1rem;
+}
+
+/* Animação suave ao carregar a página */
+.card {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+} 

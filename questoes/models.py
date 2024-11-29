@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -15,20 +16,34 @@ class Materia(models.Model):
         verbose_name_plural = 'Matérias'
 
 class Questao(models.Model):
-    TIPOS_QUESTAO = [
+    DIFICULDADE_CHOICES = [
+        ('F', 'Fácil'),
+        ('M', 'Médio'),
+        ('D', 'Difícil')
+    ]
+    
+    TIPO_CHOICES = [
         ('ME', 'Múltipla Escolha'),
         ('CE', 'Certo ou Errado'),
     ]
-
-    materia = models.ForeignKey(Materia, on_delete=models.CASCADE, verbose_name='Matéria')
-    tipo_questao = models.CharField(max_length=2, choices=TIPOS_QUESTAO, verbose_name='Tipo de Questão')
+    
     enunciado = models.TextField()
-    comentarios = models.TextField(blank=True, verbose_name='Comentários')
-    data_criacao = models.DateTimeField(auto_now_add=True, verbose_name='Data de Criação')
+    materia = models.ForeignKey(Materia, on_delete=models.CASCADE)
+    tipo_questao = models.CharField(max_length=2, choices=TIPO_CHOICES)
+    dificuldade = models.CharField(  # Novo campo
+        max_length=1, 
+        choices=DIFICULDADE_CHOICES,
+        default='M'
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = 'Questão'
         verbose_name_plural = 'Questões'
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f"Questão {self.id} - {self.materia.nome}"
 
 class QuestaoMultiplaEscolha(models.Model):
     questao = models.OneToOneField(Questao, on_delete=models.CASCADE)
@@ -54,8 +69,9 @@ class QuestaoCertoErrado(models.Model):
 class RespostaUsuario(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     questao = models.ForeignKey('Questao', on_delete=models.CASCADE)
-    resposta = models.CharField(max_length=10)  # Armazena 'A', 'B', 'C', 'D', 'E' ou 'True'/'False'
+    resposta = models.TextField()
     esta_correta = models.BooleanField()
+    data_inicio = models.DateTimeField(auto_now_add=True)
     data_resposta = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -66,7 +82,7 @@ class RespostaUsuario(models.Model):
         unique_together = ['usuario', 'questao']
 
     def __str__(self):
-        return f"{self.usuario.username} - Questão {self.questao.id} - {'Correta' if self.esta_correta else 'Incorreta'}"
+        return f"{self.usuario.username} - {self.questao.id}"
 
 class ComentarioQuestao(models.Model):
     questao = models.ForeignKey('Questao', on_delete=models.CASCADE, related_name='comentarios_questao')

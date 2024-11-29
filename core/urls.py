@@ -16,8 +16,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+
+# View para redirecionar a raiz para a aplicação questoes
+def redirect_to_questoes(request):
+    return redirect('home')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('questoes/', include('questoes.urls')),
+    path('', redirect_to_questoes, name='root'),  # Redireciona a raiz para questoes
+    path('questoes/', include('questoes.urls')),  # Inclui todas as URLs do app questoes
 ]

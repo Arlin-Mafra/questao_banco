@@ -4,7 +4,12 @@ from .models import Questao, QuestaoMultiplaEscolha, QuestaoCertoErrado, Materia
 class QuestaoForm(forms.ModelForm):
     class Meta:
         model = Questao
-        fields = ['materia', 'tipo_questao', 'enunciado', 'comentarios']
+        fields = ['enunciado', 'materia', 'tipo_questao', 'dificuldade']
+        widgets = {
+            'enunciado': forms.Textarea(attrs={'rows': 4}),
+            'tipo_questao': forms.RadioSelect(),
+            'dificuldade': forms.RadioSelect()
+        }
 
 class QuestaoMultiplaEscolhaForm(forms.ModelForm):
     class Meta:

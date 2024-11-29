@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Cards de Estatísticas -->
+    <div class="row g-4 mb-4">
+        <!-- Total de Questões -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card custom-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total de Questões</h6>
+                            <h2 class="mt-2 mb-0">{{ total_questoes }}</h2>
+                        </div>
+                        <i class="bi bi-question-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questões Respondidas -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card custom-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Questões Respondidas</h6>
+                            <h2 class="mt-2 mb-0">{{ questoes_respondidas }}</h2>
+                        </div>
+                        <i class="bi bi-check-circle fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Taxa de Acerto -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card custom-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Taxa de Acerto</h6>
+                            <h2 class="mt-2 mb-0">{{ taxa_acerto }}%</h2>
+                        </div>
+                        <i class="bi bi-graph-up fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total de Usuários -->
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card custom-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total de Usuários</h6>
+                            <h2 class="mt-2 mb-0">{{ total_usuarios }}</h2>
+                        </div>
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos e Tabelas -->
+    <div class="row g-4">
+        <!-- Desempenho por Matéria -->
+        <div class="col-12 col-lg-6">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Desempenho por Matéria</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Matéria</th>
+                                    <th>Total</th>
+                                    <th>Corretas</th>
+                                    <th>Taxa de Acerto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for materia in desempenho_por_materia %}
+                                <tr>
+                                    <td>{{ materia.questao__materia__nome }}</td>
+                                    <td>{{ materia.total }}</td>
+                                    <td>{{ materia.corretas }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ materia.taxa_acerto }}%"
+                                                 aria-valuenow="{{ materia.taxa_acerto }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ materia.taxa_acerto|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ranking de Usuários -->
+        <div class="col-12 col-lg-6">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Top 5 Usuários</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Usuário</th>
+                                    <th>Questões Corretas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in ranking_usuarios %}
+                                <tr {% if user == request.user %}class="table-primary"{% endif %}>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.total_corretas }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Últimas Questões Respondidas -->
+        <div class="col-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Últimas Questões Respondidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Matéria</th>
+                                    <th>Questão</th>
+                                    <th>Resultado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resposta in ultimas_respostas %}
+                                <tr>
+                                    <td>{{ resposta.data_resposta|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ resposta.questao.materia.nome }}</td>
+                                    <td>{{ resposta.questao.enunciado|truncatechars:50 }}</td>
+                                    <td>
+                                        {% if resposta.esta_correta %}
+                                        <span class="badge bg-success">Correta</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Incorreta</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block main_content %}
+<div class="container-fluid">
+    <!-- Filtros -->
+    <div class="card custom-card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Período de Análise</label>
+                    <select name="periodo" class="form-select" onchange="this.form.submit()">
+                        <option value="7" {% if periodo_selecionado == '7' %}selected{% endif %}>Últimos 7 dias</option>
+                        <option value="30" {% if periodo_selecionado == '30' %}selected{% endif %}>Últimos 30 dias</option>
+                        <option value="90" {% if periodo_selecionado == '90' %}selected{% endif %}>Últimos 90 dias</option>
+                        <option value="365" {% if periodo_selecionado == '365' %}selected{% endif %}>Último ano</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Evolução do Desempenho -->
+        <div class="col-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Evolução do Desempenho</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="evolucaoChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tempo Médio e Horários Produtivos -->
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Análise de Tempo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Tempo Médio por Questão</h6>
+                        <h3>{{ tempo_medio|time:"i:s" }} minutos</h3>
+                    </div>
+                    <div>
+                        <h6>Horários Mais Produtivos</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Horário</th>
+                                        <th>Questões Corretas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for horario in horarios_produtivos %}
+                                    <tr>
+                                        <td>{{ horario.hora }}:00</td>
+                                        <td>{{ horario.total }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Análise por Dificuldade -->
+        <div class="col-md-6">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Desempenho por Nível de Dificuldade</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="dificuldadeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparação com Média Geral -->
+        <div class="col-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Seu Desempenho vs. Média Geral</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Matéria</th>
+                                    <th>Sua Média</th>
+                                    <th>Média Geral</th>
+                                    <th>Comparação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comp in comparacao_geral %}
+                                <tr>
+                                    <td>{{ comp.materia }}</td>
+                                    <td>{{ comp.media_usuario }}%</td>
+                                    <td>{{ comp.media_geral }}%</td>
+                                    <td>
+                                        {% if comp.media_usuario > comp.media_geral %}
+                                        <span class="text-success">
+                                            <i class="bi bi-arrow-up"></i>
+                                            +{{ comp.media_usuario|floatformat:1 }}%
+                                        </span>
+                                        {% else %}
+                                        <span class="text-danger">
+                                            <i class="bi bi-arrow-down"></i>
+                                            -{{ comp.media_geral|floatformat:1 }}%
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Gráfico de Evolução
+    const evolucaoCtx = document.getElementById('evolucaoChart').getContext('2d');
+    new Chart(evolucaoCtx, {
+        type: 'line',
+        data: {
+            labels: {{ evolucao_diaria_labels|safe }},
+            datasets: [{
+                label: 'Taxa de Acerto',
+                data: {{ evolucao_diaria_data|safe }},
+                borderColor: '#0d6efd',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+
+    // Gráfico de Dificuldade
+    const dificuldadeCtx = document.getElementById('dificuldadeChart').getContext('2d');
+    new Chart(dificuldadeCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ dificuldade_labels|safe }},
+            datasets: [{
+                label: 'Taxa de Acerto',
+                data: {{ dificuldade_data|safe }},
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

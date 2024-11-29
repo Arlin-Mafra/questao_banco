@@ -3,13 +3,22 @@ from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .forms import QuestaoForm, QuestaoMultiplaEscolhaForm, QuestaoCertoErradoForm
-from .models import Questao, Materia, QuestaoMultiplaEscolha, QuestaoCertoErrado, RespostaUsuario, ComentarioQuestao
+from .models import Questao, Materia, RespostaUsuario, ComentarioQuestao
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import Paginator
-from django.db.models import Prefetch
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+from django.db.models import Count, Avg
+from django.db.models import Q
+from django.db.models import Case
+from django.db.models import When
+from django.db.models import FloatField
+from django.db.models.functions import TruncDay, ExtractHour
+from datetime import datetime, timedelta
+from django.db.models import F
 
 def criar_questao(request):
     if request.method == 'POST':
@@ -214,3 +223,179 @@ def deletar_comentario(request, comentario_id):
             'status': 'error',
             'message': 'Comentário não encontrado.'
         })
+
+# View para página inicial
+@login_required
+def home(request):
+    return redirect('dashboard')
+
+# View para registro de usuários
+def registro(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Conta criada com sucesso para {username}!')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'questoes/registro.html', {'form': form})
+
+@login_required
+def dashboard(request):
+    # Estatísticas gerais
+    total_questoes = Questao.objects.count()
+    total_usuarios = User.objects.count()
+    total_materias = Materia.objects.count()
+    
+    # Estatísticas do usuário
+    questoes_respondidas = RespostaUsuario.objects.filter(usuario=request.user).count()
+    questoes_corretas = RespostaUsuario.objects.filter(
+        usuario=request.user, 
+        esta_correta=True
+    ).count()
+    
+    # Calcular porcentagem de acertos
+    taxa_acerto = (questoes_corretas / questoes_respondidas * 100) if questoes_respondidas > 0 else 0
+    
+    # Estatísticas por matéria
+    desempenho_por_materia = RespostaUsuario.objects.filter(
+        usuario=request.user
+    ).values(
+        'questao__materia__nome'
+    ).annotate(
+        total=Count('id'),
+        corretas=Count('id', filter=Q(esta_correta=True)),
+        taxa_acerto=Avg(Case(
+            When(esta_correta=True, then=100),
+            When(esta_correta=False, then=0),
+            output_field=FloatField(),
+        ))
+    ).order_by('-taxa_acerto')
+    
+    # Últimas questões respondidas
+    ultimas_respostas = RespostaUsuario.objects.filter(
+        usuario=request.user
+    ).select_related('questao').order_by('-data_resposta')[:5]
+    
+    # Ranking de usuários (top 5)
+    ranking_usuarios = User.objects.annotate(
+        total_corretas=Count('respostausuario', filter=Q(respostausuario__esta_correta=True))
+    ).order_by('-total_corretas')[:5]
+    
+    context = {
+        'total_questoes': total_questoes,
+        'total_usuarios': total_usuarios,
+        'total_materias': total_materias,
+        'questoes_respondidas': questoes_respondidas,
+        'questoes_corretas': questoes_corretas,
+        'taxa_acerto': round(taxa_acerto, 1),
+        'desempenho_por_materia': desempenho_por_materia,
+        'ultimas_respostas': ultimas_respostas,
+        'ranking_usuarios': ranking_usuarios,
+    }
+    
+    return render(request, 'questoes/dashboard.html', context)
+
+@login_required
+def relatorios(request):
+    # Período selecionado (default: último mês)
+    periodo = request.GET.get('periodo', '30')  # dias
+    data_inicio = datetime.now() - timedelta(days=int(periodo))
+    
+    # Evolução diária
+    evolucao_diaria = RespostaUsuario.objects.filter(
+        usuario=request.user,
+        data_resposta__gte=data_inicio
+    ).annotate(
+        dia=TruncDay('data_resposta')
+    ).values('dia').annotate(
+        total=Count('id'),
+        corretas=Count('id', filter=Q(esta_correta=True)),
+        taxa_acerto=Avg(Case(
+            When(esta_correta=True, then=100),
+            When(esta_correta=False, then=0),
+            output_field=FloatField(),
+        ))
+    ).order_by('dia')
+    
+    # Horários mais produtivos
+    horarios_produtivos = RespostaUsuario.objects.filter(
+        usuario=request.user,
+        esta_correta=True
+    ).annotate(
+        hora=ExtractHour('data_resposta')
+    ).values('hora').annotate(
+        total=Count('id')
+    ).order_by('-total')[:5]
+    
+    # Análise por dificuldade
+    analise_dificuldade = RespostaUsuario.objects.filter(
+        usuario=request.user
+    ).values(
+        'questao__dificuldade'
+    ).annotate(
+        total=Count('id'),
+        corretas=Count('id', filter=Q(esta_correta=True)),
+        taxa_acerto=Avg(Case(
+            When(esta_correta=True, then=100),
+            When(esta_correta=False, then=0),
+            output_field=FloatField(),
+        ))
+    ).order_by('questao__dificuldade')
+    
+    # Converter códigos de dificuldade para labels legíveis
+    dificuldade_map = dict(Questao.DIFICULDADE_CHOICES)
+    dificuldade_labels = [dificuldade_map[item['questao__dificuldade']] 
+                         for item in analise_dificuldade]
+    dificuldade_data = [float(item['taxa_acerto'] or 0) 
+                       for item in analise_dificuldade]
+    
+    # Comparação com média geral
+    comparacao_geral = []
+    for materia in Materia.objects.all():
+        media_geral = RespostaUsuario.objects.filter(
+            questao__materia=materia
+        ).aggregate(
+            taxa=Avg(Case(
+                When(esta_correta=True, then=100),
+                When(esta_correta=False, then=0),
+                output_field=FloatField(),
+            ))
+        )['taxa'] or 0
+        
+        media_usuario = RespostaUsuario.objects.filter(
+            questao__materia=materia,
+            usuario=request.user
+        ).aggregate(
+            taxa=Avg(Case(
+                When(esta_correta=True, then=100),
+                When(esta_correta=False, then=0),
+                output_field=FloatField(),
+            ))
+        )['taxa'] or 0
+        
+        comparacao_geral.append({
+            'materia': materia.nome,
+            'media_geral': round(media_geral, 1),
+            'media_usuario': round(media_usuario, 1)
+        })
+
+    # Preparar dados para os gráficos
+    evolucao_diaria_labels = [item['dia'].strftime('%d/%m') for item in evolucao_diaria]
+    evolucao_diaria_data = [float(item['taxa_acerto'] or 0) for item in evolucao_diaria]
+    
+    context = {
+        'evolucao_diaria': evolucao_diaria,
+        'horarios_produtivos': horarios_produtivos,
+        'analise_dificuldade': analise_dificuldade,
+        'comparacao_geral': comparacao_geral,
+        'periodo_selecionado': periodo,
+        'evolucao_diaria_labels': evolucao_diaria_labels,
+        'evolucao_diaria_data': evolucao_diaria_data,
+        'dificuldade_labels': dificuldade_labels,
+        'dificuldade_data': dificuldade_data,
+    }
+    
+    return render(request, 'questoes/relatorios.html', context)
