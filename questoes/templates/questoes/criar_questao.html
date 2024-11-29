@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% load widget_tweaks %}
+
+{% block title %}Cadastrar Nova Questão{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Cadastrar Questão</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card custom-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Cadastrar Nova Questão
+                </h4>
+            </div>
+
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Informações Básicas -->
+                <div class="card custom-card mb-4">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Informações Básicas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ questao_form.materia.id_for_label }}" class="form-label">Matéria</label>
+                                {{ questao_form.materia|add_class:"form-select" }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ questao_form.tipo_questao.id_for_label }}" class="form-label">Tipo de Questão</label>
+                                {{ questao_form.tipo_questao|add_class:"form-select" }}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ questao_form.enunciado.id_for_label }}" class="form-label">Enunciado</label>
+                                {{ questao_form.enunciado|add_class:"form-control"|attr:"rows:4" }}
+                            </div>
+                            <div class="col-12">
+                                <label for="{{ questao_form.comentarios.id_for_label }}" class="form-label">Comentários</label>
+                                {{ questao_form.comentarios|add_class:"form-control"|attr:"rows:3" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Múltipla Escolha -->
+                <div id="form-multipla-escolha" class="card custom-card mb-4" style="display: none;">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-check me-2"></i>
+                            Alternativas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% for field in me_form %}
+                            <div class="col-md-12">
+                                <label for="{{ field.id_for_label }}" class="form-label">
+                                    {% if 'alternativa' in field.name %}
+                                        Alternativa {{ field.name|slice:"-1"|upper }}
+                                    {% else %}
+                                        {{ field.label }}
+                                    {% endif %}
+                                </label>
+                                {{ field|add_class:"form-control" }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Certo ou Errado -->
+                <div id="form-certo-errado" class="card custom-card mb-4" style="display: none;">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Resposta
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch">
+                            {{ ce_form.resposta_correta }}
+                            <label class="form-check-label" for="{{ ce_form.resposta_correta.id_for_label }}">
+                                Marque se a afirmação for verdadeira
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="button" class="btn btn-outline-secondary me-md-2">
+                        <i class="bi bi-x-circle me-2"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-2"></i>
+                        Salvar Questão
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoQuestao = document.querySelector('#id_tipo_questao');
+    const formME = document.querySelector('#form-multipla-escolha');
+    const formCE = document.querySelector('#form-certo-errado');
+
+    function toggleForms() {
+        if (tipoQuestao.value === 'ME') {
+            formME.style.display = 'block';
+            formCE.style.display = 'none';
+        } else if (tipoQuestao.value === 'CE') {
+            formME.style.display = 'none';
+            formCE.style.display = 'block';
+        }
+    }
+
+    // Validação do formulário
+    const forms = document.querySelectorAll('.needs-validation');
+    Array.from(forms).forEach(form => {
+        form.addEventListener('submit', event => {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    tipoQuestao.addEventListener('change', toggleForms);
+    toggleForms();
+});
+</script>
+
+{% endblock %} 

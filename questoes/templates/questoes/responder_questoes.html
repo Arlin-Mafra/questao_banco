@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load questoes_extras %}
+
+{% block title %}Questões{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Questões</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <div class="card custom-card">
+        <div class="card-body">
+            <!-- Filtros -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="card-title mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Responder Questões
+                </h4>
+                <form method="get" class="d-flex align-items-center gap-2">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-book"></i>
+                        </span>
+                        <select name="materia" class="form-select">
+                            <option value="">Todas as Matérias</option>
+                            {% for materia in materias %}
+                            <option value="{{ materia.id }}" {% if materia.id|stringformat:"s" == materia_id %}selected{% endif %}>
+                                {{ materia.nome }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-grid"></i>
+                        </span>
+                        <select name="paginate_by" class="form-select">
+                            <option value="5" {% if request.GET.paginate_by == '5' or not request.GET.paginate_by %}selected{% endif %}>5 por página</option>
+                            <option value="10" {% if request.GET.paginate_by == '10' %}selected{% endif %}>10 por página</option>
+                            <option value="20" {% if request.GET.paginate_by == '20' %}selected{% endif %}>20 por p��gina</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter me-2"></i>Filtrar
+                    </button>
+                </form>
+            </div>
+
+            {% if page_obj %}
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="list-group">
+                    {% for questao in page_obj %}
+                    <div class="list-group-item mb-3 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge bg-secondary me-2">Questão {{ forloop.counter }}</span>
+                                <span class="badge bg-primary">{{ questao.materia.nome }}</span>
+                            </div>
+                            <span class="badge {% if questao.tipo_questao == 'ME' %}bg-info{% else %}bg-warning{% endif %}">
+                                {% if questao.tipo_questao == 'ME' %}
+                                    <i class="bi bi-list-check me-1"></i>Múltipla Escolha
+                                {% else %}
+                                    <i class="bi bi-check-square me-1"></i>Certo ou Errado
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="questao-enunciado mb-4">
+                            {{ questao.enunciado }}
+                        </div>
+                        
+                        {% if questao.tipo_questao == 'ME' %}
+                            {% with mc=questao.questaomultiplaescolha %}
+                            <div class="alternativas">
+                                <div class="form-check mb-2 {% if status_questoes %}
+                                    {% if 'A' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'A' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="A" 
+                                           id="resposta_{{ questao.id }}_A"
+                                           {% if respostas_usuario|get_item:questao.id == 'A' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_A">
+                                        <strong>A)</strong> {{ mc.alternativa_a }}
+                                        {% if status_questoes and 'A' == mc.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2 {% if status_questoes %}
+                                    {% if 'B' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'B' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="B" 
+                                           id="resposta_{{ questao.id }}_B"
+                                           {% if respostas_usuario|get_item:questao.id == 'B' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_B">
+                                        <strong>B)</strong> {{ mc.alternativa_b }}
+                                        {% if status_questoes and 'B' == mc.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2 {% if status_questoes %}
+                                    {% if 'C' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'C' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="C" 
+                                           id="resposta_{{ questao.id }}_C"
+                                           {% if respostas_usuario|get_item:questao.id == 'C' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_C">
+                                        <strong>C)</strong> {{ mc.alternativa_c }}
+                                        {% if status_questoes and 'C' == mc.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2 {% if status_questoes %}
+                                    {% if 'D' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'D' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="D" 
+                                           id="resposta_{{ questao.id }}_D"
+                                           {% if respostas_usuario|get_item:questao.id == 'D' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_D">
+                                        <strong>D)</strong> {{ mc.alternativa_d }}
+                                        {% if status_questoes and 'D' == mc.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2 {% if status_questoes %}
+                                    {% if 'E' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'E' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="E" 
+                                           id="resposta_{{ questao.id }}_E"
+                                           {% if respostas_usuario|get_item:questao.id == 'E' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_E">
+                                        <strong>E)</strong> {{ mc.alternativa_e }}
+                                        {% if status_questoes and 'E' == mc.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% else %}
+                            <div class="verdadeiro-falso">
+                                {% with ce=questao.questaocertoerrado %}
+                                <div class="form-check form-check-inline {% if status_questoes %}
+                                    {% if ce.resposta_correta %}resposta-correta{% endif %}
+                                    {% if respostas_usuario|get_item:questao.id == 'True' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="True" 
+                                           id="resposta_{{ questao.id }}_True"
+                                           {% if respostas_usuario|get_item:questao.id == 'True' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_True">
+                                        <i class="bi bi-check-circle text-success me-1"></i>Verdadeiro
+                                        {% if status_questoes and ce.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline {% if status_questoes %}
+                                    {% if not ce.resposta_correta %}resposta-correta{% endif %}
+                                    {% if respostas_usuario|get_item:questao.id == 'False' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+                                {% endif %}">
+                                    <input class="form-check-input" type="radio" 
+                                           name="resposta_{{ questao.id }}" 
+                                           value="False" 
+                                           id="resposta_{{ questao.id }}_False"
+                                           {% if respostas_usuario|get_item:questao.id == 'False' %}checked{% endif %}
+                                           {% if status_questoes %}disabled{% endif %}>
+                                    <label class="form-check-label" for="resposta_{{ questao.id }}_False">
+                                        <i class="bi bi-x-circle text-danger me-1"></i>Falso
+                                        {% if status_questoes and not ce.resposta_correta %}
+                                            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-send me-2"></i>
+                        Enviar Respostas
+                    </button>
+                </div>
+            </form>
+
+            <!-- Paginação -->
+            <nav aria-label="Navegação de páginas" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if materia_id %}materia={{ materia_id }}&{% endif %}paginate_by={{ request.GET.paginate_by|default:'5' }}&page={{ page_obj.previous_page_number }}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?{% if materia_id %}materia={{ materia_id }}&{% endif %}paginate_by={{ request.GET.paginate_by|default:'5' }}&page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if materia_id %}materia={{ materia_id }}&{% endif %}paginate_by={{ request.GET.paginate_by|default:'5' }}&page={{ page_obj.next_page_number }}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="mt-3 text-muted">Nenhuma questão encontrada.</p>
+                <p class="text-muted">Tente selecionar outra matéria ou remover os filtros.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.questao-enunciado {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--bs-body-color);
+    background-color: var(--bs-light);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--bs-primary);
+}
+
+.alternativas {
+    padding-left: 1rem;
+}
+
+.form-check {
+    margin-bottom: 0.75rem;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+.form-check-input:checked + .form-check-label {
+    color: var(--bs-primary);
+    font-weight: 500;
+}
+
+.verdadeiro-falso {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.custom-card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.list-group-item {
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: 0.5rem !important;
+}
+
+.input-group-text {
+    background-color: var(--bs-light);
+}
+
+.resposta-correta {
+    background-color: rgba(25, 135, 84, 0.1);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+.resposta-correta .form-check-label {
+    color: #198754;
+    font-weight: 500;
+}
+
+.resposta-incorreta {
+    background-color: rgba(220, 53, 69, 0.1);
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+}
+
+.resposta-incorreta .form-check-label {
+    color: #dc3545;
+    text-decoration: line-through;
+}
+
+/* Estilo para inputs desabilitados */
+.form-check-input:disabled {
+    opacity: 0.7;
+}
+
+/* Animação de feedback */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.resposta-correta,
+.resposta-incorreta {
+    animation: fadeIn 0.3s ease-in-out;
+}
+</style>
+{% endblock %}
