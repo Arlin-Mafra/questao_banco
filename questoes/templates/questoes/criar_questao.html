@@ -1,160 +1,252 @@
 {% extends 'base.html' %}
 
-{% load widget_tweaks %}
-
-{% block title %}Cadastrar Nova Questão{% endblock %}
-
-{% block breadcrumb %}
-<li class="breadcrumb-item active">Cadastrar Questão</li>
-{% endblock %}
-
 {% block main_content %}
-<div class="container-fluid">
-    <div class="card custom-card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="card-title mb-0">
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Cadastrar Nova Questão
-                </h4>
-            </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Criar Nova Questão</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'criar_questao' %}" id="questaoForm">
+                        {% csrf_token %}
+                        
+                        <!-- Enunciado -->
+                        <div class="mb-4">
+                            <label class="form-label">Enunciado</label>
+                            {{ questao_form.enunciado }}
+                            {% if questao_form.enunciado.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ questao_form.enunciado.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
 
-            <form method="post" class="needs-validation" novalidate>
-                {% csrf_token %}
-                
-                <!-- Informações Básicas -->
-                <div class="card custom-card mb-4">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">
-                            <i class="bi bi-info-circle me-2"></i>
-                            Informações Básicas
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="{{ questao_form.materia.id_for_label }}" class="form-label">Matéria</label>
-                                {{ questao_form.materia|add_class:"form-select" }}
+                        <!-- Matéria -->
+                        <div class="mb-4">
+                            <label class="form-label">Matéria</label>
+                            {{ questao_form.materia }}
+                            {% if questao_form.materia.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ questao_form.materia.errors }}
                             </div>
-                            <div class="col-md-6">
-                                <label for="{{ questao_form.tipo_questao.id_for_label }}" class="form-label">Tipo de Questão</label>
-                                {{ questao_form.tipo_questao|add_class:"form-select" }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Dificuldade -->
+                        <div class="mb-4">
+                            <label class="form-label d-block">Dificuldade</label>
+                            <div class="btn-group" role="group">
+                                {% for radio in questao_form.dificuldade %}
+                                <div class="form-check form-check-inline">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
                             </div>
-                            <div class="col-12">
-                                <label for="{{ questao_form.enunciado.id_for_label }}" class="form-label">Enunciado</label>
-                                {{ questao_form.enunciado|add_class:"form-control"|attr:"rows:4" }}
+                            {% if questao_form.dificuldade.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ questao_form.dificuldade.errors }}
                             </div>
-                            <div class="col-12">
-                                <label for="{{ questao_form.comentarios.id_for_label }}" class="form-label">Comentários</label>
-                                {{ questao_form.comentarios|add_class:"form-control"|attr:"rows:3" }}
+                            {% endif %}
+                        </div>
+
+                        <!-- Tipo de Questão -->
+                        <div class="mb-4">
+                            <label class="form-label d-block">Tipo de Questão</label>
+                            <div class="btn-group" role="group">
+                                {% for radio in questao_form.tipo_questao %}
+                                <div class="form-check form-check-inline">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
                             </div>
+                            {% if questao_form.tipo_questao.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ questao_form.tipo_questao.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Formulário Múltipla Escolha -->
+                        <div id="multiplaEscolhaForm" class="tipo-questao-form mb-4" style="display: none;">
+                            <h5 class="mb-3">Alternativas</h5>
+                            
+                            <!-- Alternativas -->
+                            {% for field in me_form %}
+                                {% if field.name != 'gabarito' %}
+                                <div class="mb-3">
+                                    <label class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ field.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Gabarito -->
                             <div class="mb-3">
-                                <label class="form-label">Dificuldade</label>
-                                <div class="btn-group" role="group">
-                                    {% for radio in questao_form.dificuldade %}
-                                    <div class="form-check form-check-inline">
-                                        {{ radio.tag }}
-                                        <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                            {{ radio.choice_label }}
+                                <label class="form-label">Gabarito</label>
+                                {{ me_form.gabarito }}
+                                {% if me_form.gabarito.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ me_form.gabarito.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Formulário Certo/Errado -->
+                        <div id="certoErradoForm" class="tipo-questao-form mb-4" style="display: none;">
+                            <h5 class="mb-3">Gabarito</h5>
+                            <div class="form-group">
+                                <div class="btn-group-vertical w-100" role="group">
+                                    <div class="form-check mb-2">
+                                        <input type="radio" 
+                                               name="gabarito" 
+                                               value="True" 
+                                               id="gabarito_true" 
+                                               class="form-check-input">
+                                        <label class="form-check-label" for="gabarito_true">
+                                            <i class="bi bi-check-circle text-success me-1"></i>Certo
                                         </label>
                                     </div>
-                                    {% endfor %}
+                                    <div class="form-check">
+                                        <input type="radio" 
+                                               name="gabarito" 
+                                               value="False" 
+                                               id="gabarito_false" 
+                                               class="form-check-input">
+                                        <label class="form-check-label" for="gabarito_false">
+                                            <i class="bi bi-x-circle text-danger me-1"></i>Errado
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Múltipla Escolha -->
-                <div id="form-multipla-escolha" class="card custom-card mb-4" style="display: none;">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">
-                            <i class="bi bi-list-check me-2"></i>
-                            Alternativas
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            {% for field in me_form %}
-                            <div class="col-md-12">
-                                <label for="{{ field.id_for_label }}" class="form-label">
-                                    {% if 'alternativa' in field.name %}
-                                        Alternativa {{ field.name|slice:"-1"|upper }}
-                                    {% else %}
-                                        {{ field.label }}
-                                    {% endif %}
-                                </label>
-                                {{ field|add_class:"form-control" }}
-                            </div>
-                            {% endfor %}
+                        <!-- Botões -->
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="#" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-primary">Salvar Questão</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
-
-                <!-- Certo ou Errado -->
-                <div id="form-certo-errado" class="card custom-card mb-4" style="display: none;">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">
-                            <i class="bi bi-check-circle me-2"></i>
-                            Resposta
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="form-check form-switch">
-                            {{ ce_form.resposta_correta }}
-                            <label class="form-check-label" for="{{ ce_form.resposta_correta.id_for_label }}">
-                                Marque se a afirmação for verdadeira
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="button" class="btn btn-outline-secondary me-md-2">
-                        <i class="bi bi-x-circle me-2"></i>
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save me-2"></i>
-                        Salvar Questão
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoQuestao = document.querySelector('#id_tipo_questao');
-    const formME = document.querySelector('#form-multipla-escolha');
-    const formCE = document.querySelector('#form-certo-errado');
+    const form = document.getElementById('questaoForm');
+    const tipoQuestaoInputs = document.querySelectorAll('input[name="tipo_questao"]');
+    const multiplaEscolhaForm = document.getElementById('multiplaEscolhaForm');
+    const certoErradoForm = document.getElementById('certoErradoForm');
 
-    function toggleForms() {
-        if (tipoQuestao.value === 'ME') {
-            formME.style.display = 'block';
-            formCE.style.display = 'none';
-        } else if (tipoQuestao.value === 'CE') {
-            formME.style.display = 'none';
-            formCE.style.display = 'block';
+    function toggleRequiredFields(formElement, required) {
+        const inputs = formElement.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            if (required) {
+                input.setAttribute('required', '');
+            } else {
+                input.removeAttribute('required');
+            }
+        });
+    }
+
+    function showRelevantForm() {
+        const selectedType = document.querySelector('input[name="tipo_questao"]:checked')?.value;
+        console.log('Tipo selecionado:', selectedType);
+        
+        // Esconde todos os formulários e remove required
+        multiplaEscolhaForm.style.display = 'none';
+        certoErradoForm.style.display = 'none';
+        toggleRequiredFields(multiplaEscolhaForm, false);
+        toggleRequiredFields(certoErradoForm, false);
+        
+        // Mostra o formulário relevante e adiciona required
+        if (selectedType === 'ME') {
+            multiplaEscolhaForm.style.display = 'block';
+            toggleRequiredFields(multiplaEscolhaForm, true);
+            // Limpa o outro formulário
+            certoErradoForm.querySelectorAll('input[type="radio"]').forEach(input => {
+                input.checked = false;
+            });
+        } else if (selectedType === 'CE') {
+            certoErradoForm.style.display = 'block';
+            toggleRequiredFields(certoErradoForm, true);
+            // Limpa o outro formulário
+            multiplaEscolhaForm.querySelectorAll('input, textarea').forEach(input => {
+                input.value = '';
+            });
         }
     }
 
-    // Validação do formulário
-    const forms = document.querySelectorAll('.needs-validation');
-    Array.from(forms).forEach(form => {
-        form.addEventListener('submit', event => {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        }, false);
+    // Adiciona listener para cada input de tipo de questão
+    tipoQuestaoInputs.forEach(input => {
+        input.addEventListener('change', showRelevantForm);
     });
 
-    tipoQuestao.addEventListener('change', toggleForms);
-    toggleForms();
+    // Mostra o formulário correto no carregamento da página
+    showRelevantForm();
+
+    // Validação do formulário
+    form.addEventListener('submit', function(e) {
+        const selectedType = document.querySelector('input[name="tipo_questao"]:checked')?.value;
+        
+        if (selectedType === 'CE') {
+            const gabarito = certoErradoForm.querySelector('input[name="gabarito"]:checked');
+            if (!gabarito) {
+                e.preventDefault();
+                alert('Por favor, selecione se a resposta é Certo ou Errado.');
+                return;
+            }
+        }
+        
+        // Se chegou aqui, permite a submissão
+        console.log('Formulário válido, enviando...');
+    });
+
+    // Limpa o formulário se houver mensagem de sucesso
+    const successMessage = document.querySelector('.alert-success');
+    if (successMessage) {
+        form.reset();
+        showRelevantForm();
+    }
 });
 </script>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+    .form-check-inline {
+        margin-right: 2rem;
+    }
+    
+    .form-check-input[type="radio"] {
+        margin-right: 0.5rem;
+    }
+    
+    .form-check-label {
+        cursor: pointer;
+    }
+    
+    /* Estilo quando selecionado */
+    .form-check-input:checked + .form-check-label {
+        color: var(--bs-primary);
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
 {% endblock %} 

@@ -20,27 +20,62 @@ from django.db.models.functions import TruncDay, ExtractHour
 from datetime import datetime, timedelta
 from django.db.models import F
 from django.utils import timezone
+from django.db import transaction
 
 def criar_questao(request):
     if request.method == 'POST':
+        print("POST data:", request.POST)  # Debug completo do POST
         questao_form = QuestaoForm(request.POST)
-        if questao_form.is_valid():
-            questao = questao_form.save()
-            
-            if questao.tipo_questao == 'ME':
-                me_form = QuestaoMultiplaEscolhaForm(request.POST)
-                if me_form.is_valid():
-                    questao_me = me_form.save(commit=False)
-                    questao_me.questao = questao
-                    questao_me.save()
-            else:
-                ce_form = QuestaoCertoErradoForm(request.POST)
-                if ce_form.is_valid():
-                    questao_ce = ce_form.save(commit=False)
-                    questao_ce.questao = questao
-                    questao_ce.save()
+        tipo_questao = request.POST.get('tipo_questao')
+        me_form = None
+        ce_form = None
+        
+        if tipo_questao == 'CE':
+            ce_form = QuestaoCertoErradoForm(request.POST)
+            print("CE Form data:", ce_form.data)
+            print("CE Form is bound:", ce_form.is_bound)
+            print("Gabarito value:", request.POST.get('gabarito'))
+            print("CE Form fields:", ce_form.fields['gabarito'])
+            if not ce_form.is_valid():
+                print("CE Form errors:", ce_form.errors)
+        else:
+            me_form = QuestaoMultiplaEscolhaForm(request.POST)
+        
+        try:
+            with transaction.atomic():
+                if questao_form.is_valid():
+                    questao = questao_form.save()
                     
-            return redirect('lista_questoes')
+                    if tipo_questao == 'ME':
+                        if me_form.is_valid():
+                            questao_me = me_form.save(commit=False)
+                            questao_me.questao = questao
+                            questao_me.save()
+                            messages.success(request, 'Questão de múltipla escolha criada com sucesso!')
+                            return redirect('criar_questao')
+                        else:
+                            raise ValueError('Formulário de múltipla escolha inválido')
+                    
+                    elif tipo_questao == 'CE':
+                        if ce_form.is_valid():
+                            questao_ce = ce_form.save(commit=False)
+                            questao_ce.questao = questao
+                            questao_ce.save()  # O gabarito já foi convertido no clean_gabarito
+                            messages.success(request, 'Questão de certo/errado criada com sucesso!')
+                            return redirect('criar_questao')
+                        else:
+                            print("Erros do formulário CE:", ce_form.errors)  # Debug
+                            raise ValueError('Formulário de certo/errado inválido')
+                    
+                    else:
+                        raise ValueError('Tipo de questão inválido')
+                else:
+                    messages.error(request, 'Erro ao criar questão. Verifique os campos.', extra_tags='danger')
+
+        except ValueError as e:
+            messages.error(request, str(e))
+        except Exception as e:
+            messages.error(request, f'Erro ao criar questão: {str(e)}')
     else:
         questao_form = QuestaoForm()
         me_form = QuestaoMultiplaEscolhaForm()
@@ -84,85 +119,90 @@ class MateriaDeletarView(SuccessMessageMixin, DeleteView):
 
 @login_required
 def responder_questoes(request):
-    materias = Materia.objects.all()
+    # Pegar o filtro de matéria
     materia_id = request.GET.get('materia')
+    paginate_by = request.GET.get('paginate_by', '5')
     
-    questoes = Questao.objects.select_related(
-        'materia',
-        'questaomultiplaescolha',
-        'questaocertoerrado'
-    ).order_by('materia__nome', 'id')
-
+    # Iniciar o queryset base
+    questoes = Questao.objects.all().order_by('?')
+    
+    # Aplicar filtro de matéria se selecionado
     if materia_id:
         questoes = questoes.filter(materia_id=materia_id)
-
-    # Pegar respostas anteriores do usuário
-    respostas_anteriores = RespostaUsuario.objects.filter(
-        usuario=request.user,
-        questao__in=questoes
-    ).select_related('questao')
     
-    # Criar dicionários para armazenar respostas e status anteriores
-    respostas_usuario = {r.questao.id: r.resposta for r in respostas_anteriores}
-    status_questoes = {r.questao.id: 'correta' if r.esta_correta else 'incorreta' 
-                      for r in respostas_anteriores}
-
-    paginator = Paginator(questoes, request.GET.get('paginate_by', 5))
-    page_number = request.GET.get('page')
+    # Pegar todas as matérias para o dropdown
+    materias = Materia.objects.all()
+    
+    # Paginação
+    paginator = Paginator(questoes, int(paginate_by))
+    page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
-
+    
+    # Processar respostas se for POST
     if request.method == 'POST':
-        for questao in page_obj:
-            resposta_usuario = request.POST.get(f'resposta_{questao.id}')
-            if not resposta_usuario:
-                continue
-
-            esta_correta = False
-            if questao.tipo_questao == 'ME':
-                mc = questao.questaomultiplaescolha
-                esta_correta = mc and resposta_usuario == mc.resposta_correta
-            elif questao.tipo_questao == 'CE':
-                ce = questao.questaocertoerrado
-                esta_correta = ce and resposta_usuario == str(ce.resposta_correta)
-
-            # Salvar ou atualizar a resposta do usuário
-            RespostaUsuario.objects.update_or_create(
-                usuario=request.user,
-                questao=questao,
-                defaults={
-                    'resposta': resposta_usuario,
-                    'esta_correta': esta_correta
-                }
-            )
-
-            # Atualizar dicionários para feedback imediato
-            respostas_usuario[questao.id] = resposta_usuario
-            status_questoes[questao.id] = 'correta' if esta_correta else 'incorreta'
-
-            if esta_correta:
-                messages.success(request, f'Questão {questao.id}: Resposta correta!')
-            else:
-                if questao.tipo_questao == 'ME':
-                    messages.error(request, f'Questão {questao.id}: Resposta incorreta. A correta é {mc.resposta_correta}.')
-                else:
-                    messages.error(request, f'Questão {questao.id}: Resposta incorreta. A correta é {"Verdadeiro" if ce.resposta_correta else "Falso"}.')
-
-    # Adicionar estatísticas do usuário
+        for key, value in request.POST.items():
+            if key.startswith('resposta_'):
+                questao_id = key.split('_')[1]
+                try:
+                    questao = Questao.objects.get(id=questao_id)
+                    
+                    # Verificar se a resposta está correta
+                    if questao.tipo_questao == 'ME':
+                        esta_correta = (value == questao.questaomultiplaescolha.gabarito)
+                    else:
+                        # Converter string 'True'/'False' para boolean
+                        resposta_usuario = value.lower() == 'true'
+                        gabarito = questao.questaocertoerrado.gabarito
+                        esta_correta = (resposta_usuario == gabarito)
+                        
+                        print(f"Debug - Questão {questao_id}:")  # Debug
+                        print(f"Resposta usuário: {resposta_usuario} ({type(resposta_usuario)})")
+                        print(f"Gabarito: {gabarito} ({type(gabarito)})")
+                        print(f"Está correta: {esta_correta}")
+                    
+                    # Salvar a resposta
+                    RespostaUsuario.objects.update_or_create(
+                        usuario=request.user,
+                        questao=questao,
+                        defaults={
+                            'resposta': value,
+                            'esta_correta': esta_correta
+                        }
+                    )
+                except Questao.DoesNotExist:
+                    continue
+    
+    # Pegar respostas do usuário
+    respostas_usuario = {
+        resp.questao_id: resp.resposta 
+        for resp in RespostaUsuario.objects.filter(usuario=request.user)
+    }
+    
+    # Pegar status das questões (correta/incorreta)
+    status_questoes = {
+        resp.questao_id: 'correta' if resp.esta_correta else 'incorreta'
+        for resp in RespostaUsuario.objects.filter(usuario=request.user)
+    }
+    
+    # Calcular estatísticas
     total_respondidas = RespostaUsuario.objects.filter(usuario=request.user).count()
     total_corretas = RespostaUsuario.objects.filter(usuario=request.user, esta_correta=True).count()
+    percentual_acerto = (total_corretas / total_respondidas * 100) if total_respondidas > 0 else 0
     
-    return render(request, 'questoes/responder_questoes.html', {
-        'materias': materias,
+    context = {
         'page_obj': page_obj,
+        'materias': materias,
         'materia_id': materia_id,
         'respostas_usuario': respostas_usuario,
         'status_questoes': status_questoes,
         'estatisticas': {
             'total_respondidas': total_respondidas,
             'total_corretas': total_corretas,
-            'percentual_acerto': (total_corretas / total_respondidas * 100) if total_respondidas > 0 else 0
+            'percentual_acerto': percentual_acerto
         }
-    })
+    }
+    
+    return render(request, 'questoes/responder_questoes.html', context)
 
 @login_required
 def adicionar_comentario(request, questao_id):
@@ -346,7 +386,7 @@ def relatorios(request):
         ))
     ).order_by('questao__dificuldade')
     
-    # Converter códigos de dificuldade para labels legíveis
+    # Converter códigos de dificuldade para labels leg��veis
     dificuldade_map = dict(Questao.DIFICULDADE_CHOICES)
     dificuldade_labels = [dificuldade_map[item['questao__dificuldade']] 
                          for item in analise_dificuldade]

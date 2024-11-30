@@ -16,27 +16,32 @@ class Materia(models.Model):
         verbose_name_plural = 'Matérias'
 
 class Questao(models.Model):
+    TIPO_CHOICES = [
+        ('ME', 'Múltipla Escolha'),
+        ('CE', 'Certo ou Errado')
+    ]
+    
     DIFICULDADE_CHOICES = [
         ('F', 'Fácil'),
         ('M', 'Médio'),
         ('D', 'Difícil')
     ]
     
-    TIPO_CHOICES = [
-        ('ME', 'Múltipla Escolha'),
-        ('CE', 'Certo ou Errado'),
-    ]
-    
     enunciado = models.TextField()
     materia = models.ForeignKey(Materia, on_delete=models.CASCADE)
-    tipo_questao = models.CharField(max_length=2, choices=TIPO_CHOICES)
-    dificuldade = models.CharField(  # Novo campo
+    tipo_questao = models.CharField(
+        max_length=2, 
+        choices=TIPO_CHOICES,
+        default='ME',  # Definindo Múltipla Escolha como default
+        verbose_name='Tipo de Questão'
+    )
+    dificuldade = models.CharField(
         max_length=1, 
         choices=DIFICULDADE_CHOICES,
         default='M'
     )
     data_criacao = models.DateTimeField(auto_now_add=True)
-
+    
     class Meta:
         verbose_name = 'Questão'
         verbose_name_plural = 'Questões'
@@ -46,43 +51,41 @@ class Questao(models.Model):
         return f"Questão {self.id} - {self.materia.nome}"
 
 class QuestaoMultiplaEscolha(models.Model):
-    questao = models.OneToOneField(Questao, on_delete=models.CASCADE)
-    alternativa_a = models.CharField(max_length=200)
-    alternativa_b = models.CharField(max_length=200)
-    alternativa_c = models.CharField(max_length=200)
-    alternativa_d = models.CharField(max_length=200)
-    alternativa_e = models.CharField(max_length=200)
-    resposta_correta = models.CharField(max_length=1, verbose_name='Resposta Correta')  # A, B, C, D ou E
+    GABARITO_CHOICES = [
+        ('A', 'Alternativa A'),
+        ('B', 'Alternativa B'),
+        ('C', 'Alternativa C'),
+        ('D', 'Alternativa D'),
+        ('E', 'Alternativa E'),
+    ]
 
-    class Meta:
-        verbose_name = 'Questão de Múltipla Escolha'
-        verbose_name_plural = 'Questões de Múltipla Escolha'
+    questao = models.OneToOneField(Questao, on_delete=models.CASCADE)
+    alternativa_a = models.TextField(max_length=200)
+    alternativa_b = models.TextField(max_length=200)
+    alternativa_c = models.TextField(max_length=200)
+    alternativa_d = models.TextField(max_length=200)
+    alternativa_e = models.TextField(max_length=200, blank=True)
+    gabarito = models.CharField(max_length=1, choices=GABARITO_CHOICES, default='A')
+
+    def __str__(self):
+        return f"Questão ME {self.questao.id}"
 
 class QuestaoCertoErrado(models.Model):
     questao = models.OneToOneField(Questao, on_delete=models.CASCADE)
-    resposta_correta = models.BooleanField(verbose_name='Resposta Correta')
+    gabarito = models.BooleanField(default=False)
 
-    class Meta:
-        verbose_name = 'Questão de Certo ou Errado'
-        verbose_name_plural = 'Questões de Certo ou Errado'
+    def __str__(self):
+        return f"Questão CE {self.questao.id}"
 
 class RespostaUsuario(models.Model):
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)
-    questao = models.ForeignKey('Questao', on_delete=models.CASCADE)
-    resposta = models.TextField()
-    esta_correta = models.BooleanField()
-    data_inicio = models.DateTimeField(default=timezone.now)
-    data_resposta = models.DateTimeField(default=timezone.now)
+    questao = models.ForeignKey(Questao, on_delete=models.CASCADE)
+    resposta = models.CharField(max_length=1)  # Para múltipla escolha será A, B, C ou D, para C/E será True/False
+    esta_correta = models.BooleanField(default=False)
+    data_resposta = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Resposta do Usuário'
-        verbose_name_plural = 'Respostas dos Usuários'
-        ordering = ['-data_resposta']
-        # Garante que um usuário só tenha uma resposta por questão
         unique_together = ['usuario', 'questao']
-
-    def __str__(self):
-        return f"{self.usuario.username} - {self.questao.id}"
 
 class ComentarioQuestao(models.Model):
     questao = models.ForeignKey('Questao', on_delete=models.CASCADE, related_name='comentarios_questao')

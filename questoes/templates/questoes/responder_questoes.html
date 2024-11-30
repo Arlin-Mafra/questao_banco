@@ -77,7 +77,7 @@
                             {% with mc=questao.questaomultiplaescolha %}
                             <div class="alternativas">
                                 <div class="form-check mb-2 {% if status_questoes %}
-                                    {% if 'A' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'A' == mc.gabarito %}resposta-correta{% endif %}
                                     {% if 'A' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -88,14 +88,14 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_A">
                                         <strong>A)</strong> {{ mc.alternativa_a }}
-                                        {% if status_questoes and 'A' == mc.resposta_correta %}
+                                        {% if status_questoes and 'A' == mc.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
                                 </div>
 
                                 <div class="form-check mb-2 {% if status_questoes %}
-                                    {% if 'B' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'B' == mc.gabarito %}resposta-correta{% endif %}
                                     {% if 'B' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -106,14 +106,14 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_B">
                                         <strong>B)</strong> {{ mc.alternativa_b }}
-                                        {% if status_questoes and 'B' == mc.resposta_correta %}
+                                        {% if status_questoes and 'B' == mc.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
                                 </div>
 
                                 <div class="form-check mb-2 {% if status_questoes %}
-                                    {% if 'C' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'C' == mc.gabarito %}resposta-correta{% endif %}
                                     {% if 'C' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -124,14 +124,14 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_C">
                                         <strong>C)</strong> {{ mc.alternativa_c }}
-                                        {% if status_questoes and 'C' == mc.resposta_correta %}
+                                        {% if status_questoes and 'C' == mc.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
                                 </div>
 
                                 <div class="form-check mb-2 {% if status_questoes %}
-                                    {% if 'D' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'D' == mc.gabarito %}resposta-correta{% endif %}
                                     {% if 'D' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -142,14 +142,14 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_D">
                                         <strong>D)</strong> {{ mc.alternativa_d }}
-                                        {% if status_questoes and 'D' == mc.resposta_correta %}
+                                        {% if status_questoes and 'D' == mc.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
                                 </div>
 
                                 <div class="form-check mb-2 {% if status_questoes %}
-                                    {% if 'E' == mc.resposta_correta %}resposta-correta{% endif %}
+                                    {% if 'E' == mc.gabarito %}resposta-correta{% endif %}
                                     {% if 'E' == respostas_usuario|get_item:questao.id and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -160,7 +160,7 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_E">
                                         <strong>E)</strong> {{ mc.alternativa_e }}
-                                        {% if status_questoes and 'E' == mc.resposta_correta %}
+                                        {% if status_questoes and 'E' == mc.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
@@ -171,7 +171,7 @@
                             <div class="verdadeiro-falso">
                                 {% with ce=questao.questaocertoerrado %}
                                 <div class="form-check form-check-inline {% if status_questoes %}
-                                    {% if ce.resposta_correta %}resposta-correta{% endif %}
+                                    {% if ce.gabarito %}resposta-correta{% endif %}
                                     {% if respostas_usuario|get_item:questao.id == 'True' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -182,13 +182,13 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_True">
                                         <i class="bi bi-check-circle text-success me-1"></i>Verdadeiro
-                                        {% if status_questoes and ce.resposta_correta %}
+                                        {% if status_questoes and ce.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>
                                 </div>
                                 <div class="form-check form-check-inline {% if status_questoes %}
-                                    {% if not ce.resposta_correta %}resposta-correta{% endif %}
+                                    {% if not ce.gabarito %}resposta-correta{% endif %}
                                     {% if respostas_usuario|get_item:questao.id == 'False' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
                                 {% endif %}">
                                     <input class="form-check-input" type="radio" 
@@ -199,7 +199,7 @@
                                            {% if status_questoes %}disabled{% endif %}>
                                     <label class="form-check-label" for="resposta_{{ questao.id }}_False">
                                         <i class="bi bi-x-circle text-danger me-1"></i>Falso
-                                        {% if status_questoes and not ce.resposta_correta %}
+                                        {% if status_questoes and not ce.gabarito %}
                                             <i class="bi bi-check-circle-fill text-success ms-2"></i>
                                         {% endif %}
                                     </label>

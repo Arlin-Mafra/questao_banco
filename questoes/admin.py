@@ -14,10 +14,10 @@ class QuestaoAdmin(admin.ModelAdmin):
 
 @admin.register(QuestaoMultiplaEscolha)
 class QuestaoMultiplaEscolhaAdmin(admin.ModelAdmin):
-    list_display = ('questao', 'resposta_correta')
-    list_filter = ('resposta_correta',)
+    list_display = ('questao', 'gabarito')
+    list_filter = ('gabarito',)
 
 @admin.register(QuestaoCertoErrado)
 class QuestaoCertoErradoAdmin(admin.ModelAdmin):
-    list_display = ('questao', 'resposta_correta')
-    list_filter = ('resposta_correta',)
+    list_display = ('questao', 'gabarito')
+    list_filter = ('gabarito',)
