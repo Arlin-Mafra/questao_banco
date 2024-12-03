@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for questoes-young-haze-9100 on 2024-12-03T13:47:33-03:00
+# fly.toml app configuration file generated for questoes-solitary-glitter-9752 on 2024-12-03T13:53:47-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'questoes-young-haze-9100'
+app = 'questoes-solitary-glitter-9752'
 primary_region = 'gig'
 console_command = '/code/manage.py shell'
 
