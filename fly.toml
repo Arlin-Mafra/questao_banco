@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for questoes-solitary-glitter-9752 on 2024-12-03T13:53:47-03:00
+# fly.toml app configuration file generated for questoes-solitary-glitter-9752 on 2024-12-03T14:44:08-03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -8,6 +8,9 @@ primary_region = 'gig'
 console_command = '/code/manage.py shell'
 
 [build]
+
+[deploy]
+  release_command = 'python manage.py migrate --noinput'
 
 [env]
   PORT = '8000'

@@ -118,6 +118,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -128,3 +129,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'home'  # para onde ir após o login
 LOGOUT_REDIRECT_URL = 'login'  # para onde ir após o logout
 LOGIN_URL = 'login'  # página de login
+
+# Ativar HTTPS para cookies CSRF em produção
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# Definir SameSite como Lax ou None para evitar problemas
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# Configurar o domínio, se necessário
+CSRF_COOKIE_DOMAIN = '.fly.dev'  # Ajuste conforme necessário
+
