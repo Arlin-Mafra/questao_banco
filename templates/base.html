@@ -153,18 +153,45 @@
                         <i class="bi bi-house"></i>
                         Dashboard
                     </a>
-                    <a href="{% url 'criar_questao' %}" class="nav-link d-flex align-items-center gap-2">
-                        <i class="bi bi-plus-circle"></i>
-                        Nova Questão
-                    </a>
                     <a href="{% url 'responder_questoes' %}" class="nav-link d-flex align-items-center gap-2">
                         <i class="bi bi-list-check"></i>
                         Questões
                     </a>
-                    <a href="{% url 'lista_materias' %}" class="nav-link d-flex align-items-center gap-2">
-                        <i class="bi bi-book"></i>
-                        Matérias
-                    </a>
+                   <!-- Dropdown de Cadastros -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCadastros" role="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-folder me-2"></i>
+                            Cadastros
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownCadastros">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'materias' %}">
+                                    <i class="bi bi-book me-2"></i>
+                                    Matérias
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'subcategorias' %}">
+                                    <i class="bi bi-diagram-3 me-2"></i>
+                                    Subcategorias
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'bancas' %}">
+                                    <i class="bi bi-building me-2"></i>
+                                    Bancas
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'criar_questao' %}">
+                                    <i class="bi bi-file-text me-2"></i>
+                                    Questões
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     <a href="{% url 'relatorios' %}" class="nav-link d-flex align-items-center gap-2">
                         <i class="bi bi-graph-up"></i>
                         Relatórios

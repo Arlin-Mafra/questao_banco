@@ -1,10 +1,19 @@
 from django import forms
-from .models import Questao, QuestaoMultiplaEscolha, QuestaoCertoErrado
+from .models import Questao, QuestaoMultiplaEscolha, QuestaoCertoErrado, SubCategoria
+from datetime import datetime
 
 class QuestaoForm(forms.ModelForm):
     class Meta:
         model = Questao
-        fields = ['enunciado', 'materia', 'tipo_questao', 'dificuldade']
+        fields = [
+            'enunciado', 
+            'materia', 
+            'subcategoria',
+            'banca',
+            'ano',
+            'tipo_questao', 
+            'dificuldade'
+        ]
         widgets = {
             'enunciado': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -12,7 +21,19 @@ class QuestaoForm(forms.ModelForm):
                 'placeholder': 'Digite o enunciado da questão'
             }),
             'materia': forms.Select(attrs={
-                'class': 'form-select'
+                'class': 'form-control'
+            }),
+            'subcategoria': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'banca': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'ano': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1990,
+                'max': datetime.now().year,
+                'placeholder': 'Ano da questão'
             }),
             'tipo_questao': forms.RadioSelect(attrs={
                 'class': 'form-check-input'
@@ -21,6 +42,23 @@ class QuestaoForm(forms.ModelForm):
                 'class': 'form-check-input'
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Inicialmente, limpa as opções de subcategoria
+        self.fields['subcategoria'].queryset = SubCategoria.objects.none()
+        
+        # Se houver uma matéria selecionada, filtra as subcategorias
+        if 'materia' in self.data:
+            try:
+                materia_id = int(self.data.get('materia'))
+                self.fields['subcategoria'].queryset = SubCategoria.objects.filter(
+                    materia_id=materia_id
+                )
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.materia:
+            self.fields['subcategoria'].queryset = self.instance.materia.subcategorias.all()
 
 class QuestaoMultiplaEscolhaForm(forms.ModelForm):
     class Meta:

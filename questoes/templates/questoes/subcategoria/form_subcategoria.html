@@ -2,12 +2,12 @@
 {% load widget_tweaks %}
 
 {% block title %}
-    {% if form.instance.pk %}Editar{% else %}Nova{% endif %} Matéria
+    {% if form.instance.pk %}Editar{% else %}Nova{% endif %} Subcategoria
 {% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'materias' %}">Matérias</a></li>
-<li class="breadcrumb-item active">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Matéria</li>
+<li class="breadcrumb-item"><a href="{% url 'subcategorias' %}">Subcategorias</a></li>
+<li class="breadcrumb-item active">{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Subcategoria</li>
 {% endblock %}
 
 {% block main_content %}
@@ -16,8 +16,8 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h4 class="card-title mb-0">
-                    <i class="bi bi-book me-2"></i>
-                    {% if form.instance.pk %}Editar{% else %}Nova{% endif %} Matéria
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    {% if form.instance.pk %}Editar{% else %}Nova{% endif %} Subcategoria
                 </h4>
             </div>
 
@@ -26,7 +26,17 @@
                 
                 <div class="row g-3">
                     <div class="col-12">
-                        <label for="{{ form.nome.id_for_label }}" class="form-label">Nome da Matéria</label>
+                        <label for="{{ form.materia.id_for_label }}" class="form-label">Matéria</label>
+                        {{ form.materia|add_class:"form-control" }}
+                        {% if form.materia.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.materia.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.nome.id_for_label }}" class="form-label">Nome da Subcategoria</label>
                         {{ form.nome|add_class:"form-control" }}
                         {% if form.nome.errors %}
                             <div class="invalid-feedback d-block">
@@ -47,7 +57,7 @@
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                    <a href="{% url 'materias' %}" class="btn btn-outline-secondary me-md-2">
+                    <a href="{% url 'subcategorias' %}" class="btn btn-outline-secondary me-md-2">
                         <i class="bi bi-x-circle me-2"></i>
                         Cancelar
                     </a>

@@ -14,67 +14,63 @@
                         
                         <!-- Enunciado -->
                         <div class="mb-4">
-                            <label class="form-label">Enunciado</label>
+                            <label for="id_enunciado" class="form-label">Enunciado</label>
                             {{ questao_form.enunciado }}
-                            {% if questao_form.enunciado.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ questao_form.enunciado.errors }}
-                            </div>
-                            {% endif %}
                         </div>
 
-                        <!-- Matéria -->
-                        <div class="mb-4">
-                            <label class="form-label">Matéria</label>
-                            {{ questao_form.materia }}
-                            {% if questao_form.materia.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ questao_form.materia.errors }}
+                        <!-- Matéria e Subcategoria em linha -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="id_materia" class="form-label">Matéria</label>
+                                {{ questao_form.materia }}
                             </div>
-                            {% endif %}
+                            <div class="col-md-6">
+                                <label for="id_subcategoria" class="form-label">Subcategoria</label>
+                                {{ questao_form.subcategoria }}
+                            </div>
                         </div>
 
-                        <!-- Dificuldade -->
-                        <div class="mb-4">
-                            <label class="form-label d-block">Dificuldade</label>
-                            <div class="btn-group" role="group">
-                                {% for radio in questao_form.dificuldade %}
-                                <div class="form-check form-check-inline">
-                                    {{ radio.tag }}
-                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                        {{ radio.choice_label }}
-                                    </label>
+                        <!-- Banca e Ano em linha -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="id_banca" class="form-label">Banca</label>
+                                {{ questao_form.banca }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="id_ano" class="form-label">Ano</label>
+                                {{ questao_form.ano }}
+                            </div>
+                        </div>
+
+                        <!-- Tipo de Questão e Dificuldade em linha -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label d-block">Tipo de Questão</label>
+                                <div class="btn-group" role="group">
+                                    {% for value, text in questao_form.tipo_questao.field.choices %}
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" name="tipo_questao" value="{{ value }}" 
+                                               class="form-check-input" id="tipo_{{ value }}" required>
+                                        <label class="form-check-label" for="tipo_{{ value }}">{{ text }}</label>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
-                            {% if questao_form.dificuldade.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ questao_form.dificuldade.errors }}
-                            </div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Tipo de Questão -->
-                        <div class="mb-4">
-                            <label class="form-label d-block">Tipo de Questão</label>
-                            <div class="btn-group" role="group">
-                                {% for radio in questao_form.tipo_questao %}
-                                <div class="form-check form-check-inline">
-                                    {{ radio.tag }}
-                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                        {{ radio.choice_label }}
-                                    </label>
+                            <div class="col-md-6">
+                                <label class="form-label d-block">Dificuldade</label>
+                                <div class="btn-group" role="group">
+                                    {% for value, text in questao_form.dificuldade.field.choices %}
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" name="dificuldade" value="{{ value }}" 
+                                               class="form-check-input" id="dif_{{ value }}" required>
+                                        <label class="form-check-label" for="dif_{{ value }}">{{ text }}</label>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
-                            {% if questao_form.tipo_questao.errors %}
-                            <div class="invalid-feedback d-block">
-                                {{ questao_form.tipo_questao.errors }}
-                            </div>
-                            {% endif %}
                         </div>
 
-                        <!-- Formulário Múltipla Escolha -->
+                        <!-- Formulários específicos -->
                         <div id="multiplaEscolhaForm" class="tipo-questao-form mb-4" style="display: none;">
                             <h5 class="mb-3">Alternativas</h5>
                             
@@ -105,7 +101,6 @@
                             </div>
                         </div>
 
-                        <!-- Formulário Certo/Errado -->
                         <div id="certoErradoForm" class="tipo-questao-form mb-4" style="display: none;">
                             <h5 class="mb-3">Gabarito</h5>
                             <div class="form-group">
@@ -153,7 +148,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoQuestaoInputs = document.querySelectorAll('input[name="tipo_questao"]');
     const multiplaEscolhaForm = document.getElementById('multiplaEscolhaForm');
     const certoErradoForm = document.getElementById('certoErradoForm');
-
+    const materiaSelect = document.getElementById('id_materia');
+    const subcategoriaSelect = document.getElementById('id_subcategoria');
+    
     function toggleRequiredFields(formElement, required) {
         const inputs = formElement.querySelectorAll('input, textarea');
         inputs.forEach(input => {
@@ -223,6 +220,47 @@ document.addEventListener('DOMContentLoaded', function() {
     if (successMessage) {
         form.reset();
         showRelevantForm();
+    }
+
+    function atualizarSubcategorias() {
+        const materiaId = materiaSelect.value;
+        
+        // Limpa o select mantendo apenas a primeira opção
+        subcategoriaSelect.length = 1;
+        
+        if (!materiaId) return;
+        
+        fetch(`/questoes/get_subcategorias/${materiaId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Usa um Map para garantir valores únicos
+                const subcategoriasUnicas = new Map();
+                
+                // Armazena apenas uma vez cada subcategoria
+                data.forEach(subcategoria => {
+                    if (!subcategoriasUnicas.has(subcategoria.id)) {
+                        subcategoriasUnicas.set(subcategoria.id, subcategoria);
+                    }
+                });
+                
+                // Adiciona as subcategorias únicas ao select
+                subcategoriasUnicas.forEach(subcategoria => {
+                    const option = document.createElement('option');
+                    option.value = subcategoria.id;
+                    option.textContent = subcategoria.nome;
+                    subcategoriaSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar subcategorias:', error);
+            });
+    }
+    
+    materiaSelect.addEventListener('change', atualizarSubcategorias);
+    
+    // Carrega subcategorias iniciais se houver matéria selecionada
+    if (materiaSelect.value) {
+        atualizarSubcategorias();
     }
 });
 </script>

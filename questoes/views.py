@@ -3,7 +3,7 @@ from django.views.generic import CreateView, ListView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib import messages
 from .forms import QuestaoForm, QuestaoMultiplaEscolhaForm, QuestaoCertoErradoForm
-from .models import Questao, Materia, RespostaUsuario, ComentarioQuestao
+from .models import Questao, Materia, RespostaUsuario, ComentarioQuestao, SubCategoria, Banca
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from django.db.models import F
 from django.utils import timezone
 from django.db import transaction
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 def criar_questao(request):
     if request.method == 'POST':
@@ -87,35 +88,71 @@ def criar_questao(request):
         'ce_form': ce_form,
     })
 
-class MateriaListView(ListView):
+class MateriaListView(LoginRequiredMixin, ListView):
     model = Materia
     template_name = 'questoes/materia/lista_materias.html'
     context_object_name = 'materias'
-    ordering = ['nome']
 
-class MateriaCriarView(SuccessMessageMixin, CreateView):
+class MateriaCreateView(LoginRequiredMixin, CreateView):
     model = Materia
     template_name = 'questoes/materia/form_materia.html'
     fields = ['nome', 'descricao']
-    success_url = reverse_lazy('lista_materias')
-    success_message = "Matéria '%(nome)s' foi criada com sucesso!"
+    success_url = reverse_lazy('materias')
 
-class MateriaEditarView(SuccessMessageMixin, UpdateView):
+class MateriaUpdateView(LoginRequiredMixin, UpdateView):
     model = Materia
     template_name = 'questoes/materia/form_materia.html'
     fields = ['nome', 'descricao']
-    success_url = reverse_lazy('lista_materias')
-    success_message = "Matéria '%(nome)s' foi atualizada com sucesso!"
+    success_url = reverse_lazy('materias')
 
-class MateriaDeletarView(SuccessMessageMixin, DeleteView):
+class MateriaDeleteView(LoginRequiredMixin, DeleteView):
     model = Materia
     template_name = 'questoes/materia/confirmar_delete_materia.html'
-    success_url = reverse_lazy('lista_materias')
-    success_message = "Matéria excluída com sucesso!"
+    success_url = reverse_lazy('materias')
 
-    def delete(self, request, *args, **kwargs):
-        messages.success(self.request, self.success_message)
-        return super(MateriaDeletarView, self).delete(request, *args, **kwargs)
+class SubCategoriaListView(LoginRequiredMixin, ListView):
+    model = SubCategoria
+    template_name = 'questoes/subcategoria/lista_subcategorias.html'
+    context_object_name = 'subcategorias'
+
+class SubCategoriaCreateView(LoginRequiredMixin, CreateView):
+    model = SubCategoria
+    template_name = 'questoes/subcategoria/form_subcategoria.html'
+    fields = ['materia', 'nome', 'descricao']
+    success_url = reverse_lazy('subcategorias')
+
+class SubCategoriaUpdateView(LoginRequiredMixin, UpdateView):
+    model = SubCategoria
+    template_name = 'questoes/subcategoria/form_subcategoria.html'
+    fields = ['materia', 'nome', 'descricao']
+    success_url = reverse_lazy('subcategorias')
+
+class SubCategoriaDeleteView(LoginRequiredMixin, DeleteView):
+    model = SubCategoria
+    template_name = 'questoes/subcategoria/confirmar_delete_subcategoria.html'
+    success_url = reverse_lazy('subcategorias')
+
+class BancaListView(LoginRequiredMixin, ListView):
+    model = Banca
+    template_name = 'questoes/banca/lista_bancas.html'
+    context_object_name = 'bancas'
+
+class BancaCreateView(LoginRequiredMixin, CreateView):
+    model = Banca
+    template_name = 'questoes/banca/form_banca.html'
+    fields = ['nome', 'sigla']
+    success_url = reverse_lazy('bancas')
+
+class BancaUpdateView(LoginRequiredMixin, UpdateView):
+    model = Banca
+    template_name = 'questoes/banca/form_banca.html'
+    fields = ['nome', 'sigla']
+    success_url = reverse_lazy('bancas')
+
+class BancaDeleteView(LoginRequiredMixin, DeleteView):
+    model = Banca
+    template_name = 'questoes/banca/confirmar_delete_banca.html'
+    success_url = reverse_lazy('bancas')
 
 @login_required
 def responder_questoes(request):
@@ -386,7 +423,7 @@ def relatorios(request):
         ))
     ).order_by('questao__dificuldade')
     
-    # Converter códigos de dificuldade para labels leg��veis
+    # Converter códigos de dificuldade para labels legveis
     dificuldade_map = dict(Questao.DIFICULDADE_CHOICES)
     dificuldade_labels = [dificuldade_map[item['questao__dificuldade']] 
                          for item in analise_dificuldade]
@@ -440,3 +477,14 @@ def relatorios(request):
     }
     
     return render(request, 'questoes/relatorios.html', context)
+
+def get_subcategorias(request, materia_id):
+    # Usando distinct() simples e ordenando por nome
+    subcategorias = (
+        SubCategoria.objects
+        .filter(materia_id=materia_id)
+        .values('id', 'nome')
+        .distinct()
+        .order_by('nome')
+    )
+    return JsonResponse(list(subcategorias), safe=False)

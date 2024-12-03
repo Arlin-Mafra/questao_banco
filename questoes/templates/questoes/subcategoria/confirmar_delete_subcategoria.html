@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
-{% block title %}Excluir Matéria{% endblock %}
+{% block title %}Excluir Subcategoria{% endblock %}
 
 {% block breadcrumb %}
-<li class="breadcrumb-item"><a href="{% url 'materias' %}">Matérias</a></li>
-<li class="breadcrumb-item active">Excluir Matéria</li>
+<li class="breadcrumb-item"><a href="{% url 'subcategorias' %}">Subcategorias</a></li>
+<li class="breadcrumb-item active">Excluir Subcategoria</li>
 {% endblock %}
 
 {% block main_content %}
@@ -12,13 +12,13 @@
     <div class="card custom-card">
         <div class="card-body text-center py-5">
             <i class="bi bi-exclamation-triangle text-warning display-1"></i>
-            <h4 class="mt-4">Tem certeza que deseja excluir a matéria "{{ object.nome }}"?</h4>
+            <h4 class="mt-4">Tem certeza que deseja excluir a subcategoria "{{ object.nome }}"?</h4>
             <p class="text-muted">Esta ação não poderá ser desfeita.</p>
             
             <form method="post" class="mt-4">
                 {% csrf_token %}
                 <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                    <a href="{% url 'materias' %}" class="btn btn-outline-secondary me-md-2">
+                    <a href="{% url 'subcategorias' %}" class="btn btn-outline-secondary me-md-2">
                         <i class="bi bi-x-circle me-2"></i>
                         Cancelar
                     </a>
