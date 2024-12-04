@@ -1,32 +1,38 @@
-<div class="comentario mb-3" id="comentario-{{ comentario.id }}">
-    <div class="d-flex">
-        <div class="comentario-avatar me-3">
-            {% if comentario.usuario.profile.avatar %}
-                <img src="{{ comentario.usuario.profile.avatar.url }}" alt="Avatar" class="rounded-circle" width="40" height="40">
-            {% else %}
-                <div class="avatar-placeholder rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                    {{ comentario.usuario.username|make_list|first|upper }}
-                </div>
-            {% endif %}
-        </div>
-        <div class="comentario-conteudo flex-grow-1">
-            <div class="bg-light p-3 rounded position-relative">
-                {% if user.is_superuser %}
-                <button type="button" 
-                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
-                        onclick="deletarComentario({{ comentario.id }})"
-                        title="Deletar comentário">
-                    <i class="bi bi-trash"></i>
-                </button>
-                {% endif %}
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0">{{ comentario.usuario.get_full_name|default:comentario.usuario.username }}</h6>
-                    <small class="text-muted">
-                        {{ comentario.data_criacao|date:"d/m/Y H:i" }}
-                    </small>
-                </div>
-                <p class="mb-0">{{ comentario.texto|linebreaks }}</p>
-            </div>
-        </div>
+{% if status_questoes %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">
+            <i class="bi bi-chat-left-text me-2"></i>
+            Comentários
+        </h5>
     </div>
-</div> 
+    <div class="card-body">
+        {% if questao.comentarios.all %}
+            {% for comentario in questao.comentarios.all %}
+            <div class="comentario mb-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ comentario.usuario.username }}</strong>
+                        <small class="text-muted ms-2">{{ comentario.data_criacao|date:"d/m/Y H:i" }}</small>
+                    </div>
+                </div>
+                <p class="mb-0 mt-2">{{ comentario.texto|linebreaks }}</p>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">Nenhum comentário ainda.</p>
+        {% endif %}
+
+        <form method="post" action="{% url 'adicionar_comentario' questao.id %}" class="mt-4">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea name="texto" class="form-control" rows="3" placeholder="Adicione um comentário..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">
+                <i class="bi bi-send me-2"></i>
+                Enviar Comentário
+            </button>
+        </form>
+    </div>
+</div>
+{% endif %}

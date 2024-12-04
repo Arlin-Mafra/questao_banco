@@ -1,0 +1,111 @@
+{% with mc=questao.questaomultiplaescolha %}
+<div class="alternativas">
+    <!-- Alternativa A -->
+    <div class="form-check mb-2 {% if questao.respondida %}
+        {% if 'A' == mc.gabarito %}resposta-correta{% endif %}
+        {% if 'A' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" 
+               name="resposta_{{ questao.id }}" 
+               value="A" 
+               id="resposta_{{ questao.id }}_A"
+               {% if questao.resposta_usuario == 'A' and not mostrar_respondidas %}checked{% endif %}
+               {% if questao.respondida and not mostrar_respondidas %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_A">
+            <strong>A)</strong> {{ mc.alternativa_a }}
+            {% if questao.respondida and 'A' == mc.gabarito %}
+                <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+
+    <!-- Alternativa B -->
+    <div class="form-check mb-2 {% if questao.respondida %}
+        {% if 'B' == mc.gabarito %}resposta-correta{% endif %}
+        {% if 'B' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" 
+               name="resposta_{{ questao.id }}" 
+               value="B" 
+               id="resposta_{{ questao.id }}_B"
+               {% if questao.resposta_usuario == 'B' and not mostrar_respondidas %}checked{% endif %}
+               {% if questao.respondida and not mostrar_respondidas %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_B">
+            <strong>B)</strong> {{ mc.alternativa_b }}
+            {% if questao.respondida and 'B' == mc.gabarito %}
+                <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+
+    <!-- Alternativa C -->
+    <div class="form-check mb-2 {% if questao.respondida %}
+        {% if 'C' == mc.gabarito %}resposta-correta{% endif %}
+        {% if 'C' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" 
+               name="resposta_{{ questao.id }}" 
+               value="C" 
+               id="resposta_{{ questao.id }}_C"
+               {% if questao.resposta_usuario == 'C' and not mostrar_respondidas %}checked{% endif %}
+               {% if questao.respondida and not mostrar_respondidas %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_C">
+            <strong>C)</strong> {{ mc.alternativa_c }}
+            {% if questao.respondida and 'C' == mc.gabarito %}
+                <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+
+    <!-- Alternativa D -->
+    <div class="form-check mb-2 {% if questao.respondida %}
+        {% if 'D' == mc.gabarito %}resposta-correta{% endif %}
+        {% if 'D' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" 
+               name="resposta_{{ questao.id }}" 
+               value="D" 
+               id="resposta_{{ questao.id }}_D"
+               {% if questao.resposta_usuario == 'D' and not mostrar_respondidas %}checked{% endif %}
+               {% if questao.respondida and not mostrar_respondidas %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_D">
+            <strong>D)</strong> {{ mc.alternativa_d }}
+            {% if questao.respondida and 'D' == mc.gabarito %}
+                <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+
+    <!-- Alternativa E -->
+    <div class="form-check mb-2 {% if questao.respondida %}
+        {% if 'E' == mc.gabarito %}resposta-correta{% endif %}
+        {% if 'E' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" 
+               name="resposta_{{ questao.id }}" 
+               value="E" 
+               id="resposta_{{ questao.id }}_E"
+               {% if questao.resposta_usuario == 'E' and not mostrar_respondidas %}checked{% endif %}
+               {% if questao.respondida and not mostrar_respondidas %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_E">
+            <strong>E)</strong> {{ mc.alternativa_e }}
+            {% if questao.respondida and 'E' == mc.gabarito %}
+                <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const radioInputs = form.querySelectorAll('input[type="radio"]');
+    
+    radioInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            form.submit();
+        });
+    });
+});
+</script>
+{% endwith %}

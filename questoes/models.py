@@ -115,6 +115,15 @@ class RespostaUsuario(models.Model):
         unique_together = ['usuario', 'questao']
         ordering = ['-data_resposta']
 
+    def save(self, *args, **kwargs):
+        # Deletar resposta anterior se existir
+        RespostaUsuario.objects.filter(
+            usuario=self.usuario,
+            questao=self.questao
+        ).delete()
+        
+        super().save(*args, **kwargs)
+
 class ComentarioQuestao(models.Model):
     questao = models.ForeignKey(Questao, on_delete=models.CASCADE, related_name='comentarios')
     usuario = models.ForeignKey(User, on_delete=models.CASCADE)

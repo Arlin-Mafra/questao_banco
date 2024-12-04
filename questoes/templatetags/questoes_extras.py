@@ -17,6 +17,16 @@ def get_alternativas(questao_me):
         questao_me.alternativa_e,
     ]
 
-@register.filter
+@register.filter(name='get_item')
 def get_item(dictionary, key):
-    return dictionary.get(key)
+    if dictionary is None:
+        return None
+    return dictionary.get(str(key))
+
+@register.filter(name='calculate_progress')
+def calculate_progress(current, total):
+    try:
+        return (float(current) / float(total)) * 100
+    except (ValueError, ZeroDivisionError):
+        return 0
+    

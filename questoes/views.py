@@ -22,6 +22,7 @@ from django.db.models import F
 from django.utils import timezone
 from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin
+from urllib.parse import urlencode
 
 def criar_questao(request):
     if request.method == 'POST':
@@ -156,22 +157,30 @@ class BancaDeleteView(LoginRequiredMixin, DeleteView):
 
 @login_required
 def responder_questoes(request):
-    # Pegar o filtro de matéria
     materia_id = request.GET.get('materia')
-    paginate_by = request.GET.get('paginate_by', '5')
-    
-    # Iniciar o queryset base
-    questoes = Questao.objects.all().order_by('?')
-    
-    # Aplicar filtro de matéria se selecionado
-    if materia_id:
-        questoes = questoes.filter(materia_id=materia_id)
+    mostrar_respondidas = request.GET.get('mostrar_respondidas', 'nao') == 'sim'
     
     # Pegar todas as matérias para o dropdown
     materias = Materia.objects.all()
     
+    # Iniciar queryset base
+    questoes = Questao.objects.all()
+    
+    # Filtrar por matéria se selecionado
+    if materia_id:
+        questoes = questoes.filter(materia_id=materia_id)
+    
+    # Filtrar questões não respondidas, se necessário
+    if not mostrar_respondidas:
+        questoes_respondidas = RespostaUsuario.objects.filter(
+            usuario=request.user
+        ).values_list('questao_id', flat=True)
+        questoes = questoes.exclude(id__in=questoes_respondidas)
+    
+    questoes = questoes.order_by('?')
+    
     # Paginação
-    paginator = Paginator(questoes, int(paginate_by))
+    paginator = Paginator(questoes, 1)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
     
@@ -187,39 +196,47 @@ def responder_questoes(request):
                     if questao.tipo_questao == 'ME':
                         esta_correta = (value == questao.questaomultiplaescolha.gabarito)
                     else:
-                        # Converter string 'True'/'False' para boolean
                         resposta_usuario = value.lower() == 'true'
-                        gabarito = questao.questaocertoerrado.gabarito
-                        esta_correta = (resposta_usuario == gabarito)
-                        
-                        print(f"Debug - Questão {questao_id}:")  # Debug
-                        print(f"Resposta usuário: {resposta_usuario} ({type(resposta_usuario)})")
-                        print(f"Gabarito: {gabarito} ({type(gabarito)})")
-                        print(f"Está correta: {esta_correta}")
+                        esta_correta = (resposta_usuario == questao.questaocertoerrado.gabarito)
                     
-                    # Salvar a resposta
-                    RespostaUsuario.objects.update_or_create(
+                    # Deletar resposta anterior se existir
+                    RespostaUsuario.objects.filter(
+                        usuario=request.user,
+                        questao=questao
+                    ).delete()
+                    
+                    # Criar nova resposta
+                    RespostaUsuario.objects.create(
                         usuario=request.user,
                         questao=questao,
-                        defaults={
-                            'resposta': value,
-                            'esta_correta': esta_correta
-                        }
+                        resposta=value,
+                        esta_correta=esta_correta
                     )
+                    
+                    # Atualizar a questão atual com o feedback
+                    if page_obj:
+                        questao_atual = page_obj[0]
+                        questao_atual.respondida = True
+                        questao_atual.resposta_usuario = value
+                        questao_atual.status = 'correta' if esta_correta else 'incorreta'
+                    
                 except Questao.DoesNotExist:
                     continue
     
-    # Pegar respostas do usuário
-    respostas_usuario = {
-        resp.questao_id: resp.resposta 
-        for resp in RespostaUsuario.objects.filter(usuario=request.user)
-    }
-    
-    # Pegar status das questões (correta/incorreta)
-    status_questoes = {
-        resp.questao_id: 'correta' if resp.esta_correta else 'incorreta'
-        for resp in RespostaUsuario.objects.filter(usuario=request.user)
-    }
+    # Preparar dados para o template
+    if page_obj:
+        questao_atual = page_obj[0]
+        resposta = RespostaUsuario.objects.filter(
+            usuario=request.user,
+            questao=questao_atual
+        ).first()
+        
+        if resposta:
+            questao_atual.respondida = True
+            questao_atual.resposta_usuario = resposta.resposta
+            questao_atual.status = 'correta' if resposta.esta_correta else 'incorreta'
+        else:
+            questao_atual.respondida = False
     
     # Calcular estatísticas
     total_respondidas = RespostaUsuario.objects.filter(usuario=request.user).count()
@@ -230,8 +247,7 @@ def responder_questoes(request):
         'page_obj': page_obj,
         'materias': materias,
         'materia_id': materia_id,
-        'respostas_usuario': respostas_usuario,
-        'status_questoes': status_questoes,
+        'mostrar_respondidas': mostrar_respondidas,
         'estatisticas': {
             'total_respondidas': total_respondidas,
             'total_corretas': total_corretas,

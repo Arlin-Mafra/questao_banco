@@ -1,0 +1,33 @@
+{% with ce=questao.questaocertoerrado %}
+<div class="verdadeiro-falso">
+    <div class="form-check form-check-inline {% if status_questoes %}
+        {% if ce.gabarito %}resposta-correta{% endif %}
+        {% if respostas_usuario|get_item:questao.id == 'True' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" name="resposta_{{ questao.id }}" value="True"
+            id="resposta_{{ questao.id }}_True" {% if respostas_usuario|get_item:questao.id=='True' %}checked{% endif %}
+            {% if status_questoes %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_True">
+            <i class="bi bi-check-circle text-success me-1"></i>Verdadeiro
+            {% if status_questoes and ce.gabarito %}
+            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+
+    <div class="form-check form-check-inline {% if status_questoes %}
+        {% if not ce.gabarito %}resposta-correta{% endif %}
+        {% if respostas_usuario|get_item:questao.id == 'False' and status_questoes|get_item:questao.id == 'incorreta' %}resposta-incorreta{% endif %}
+    {% endif %}">
+        <input class="form-check-input" type="radio" name="resposta_{{ questao.id }}" value="False"
+            id="resposta_{{ questao.id }}_False" {% if respostas_usuario|get_item:questao.id=='False' %}checked{% endif
+            %} {% if status_questoes %}disabled{% endif %}>
+        <label class="form-check-label" for="resposta_{{ questao.id }}_False">
+            <i class="bi bi-x-circle text-danger me-1"></i>Falso
+            {% if status_questoes and not ce.gabarito %}
+            <i class="bi bi-check-circle-fill text-success ms-2"></i>
+            {% endif %}
+        </label>
+    </div>
+</div>
+{% endwith %}
