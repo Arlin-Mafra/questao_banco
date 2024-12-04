@@ -243,13 +243,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                // Adiciona as subcategorias únicas ao select
                 subcategoriasUnicas.forEach(subcategoria => {
-                    const option = document.createElement('option');
-                    option.value = subcategoria.id;
-                    option.textContent = subcategoria.nome;
-                    subcategoriaSelect.appendChild(option);
+                    // Verifica se já existe uma option com este value
+                    const existingOption = Array.from(subcategoriaSelect.options)
+                        .find(option => option.value === subcategoria.id.toString());
+                    
+                    // Só cria e adiciona se não existir
+                    if (!existingOption) {
+                        const option = document.createElement('option');
+                        option.value = subcategoria.id;
+                        option.textContent = subcategoria.nome;
+                        subcategoriaSelect.appendChild(option);
+                    }
                 });
+                
             })
             .catch(error => {
                 console.error('Erro ao carregar subcategorias:', error);

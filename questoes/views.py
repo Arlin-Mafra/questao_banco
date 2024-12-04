@@ -487,4 +487,5 @@ def get_subcategorias(request, materia_id):
         .distinct()
         .order_by('nome')
     )
+    print(subcategorias)
     return JsonResponse(list(subcategorias), safe=False)
