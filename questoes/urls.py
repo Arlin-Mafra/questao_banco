@@ -1,6 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .crawler.views import iniciar_crawler
 
 urlpatterns = [
     # URLs de Autenticação
@@ -38,4 +39,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('relatorios/', views.relatorios, name='relatorios'),
     path('get_subcategorias/<int:materia_id>/', views.get_subcategorias, name='get_subcategorias'),
+    
+    path('iniciar-crawler/', iniciar_crawler, name='iniciar_crawler'),
+
 ]

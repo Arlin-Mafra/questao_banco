@@ -11,6 +11,33 @@
 {% block main_content %}
 <div class="container-fluid">
 
+    <!-- Adicione antes do card de questões -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Importar Questões</h5>
+            <form method="POST" action="{% url 'iniciar_crawler' %}">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="url" name="url_login" class="form-control" placeholder="URL de Login" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" name="usuario" class="form-control" placeholder="Usuário" required>
+                    </div>
+                    <div class="col-md-3">
+                        <input type="password" name="senha" class="form-control" placeholder="Senha" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-cloud-download"></i> Importar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <div class="card custom-card">
         <div class="card-body">
             <!-- Filtros -->
@@ -96,7 +123,7 @@
                                 {% if not questao.respondida or mostrar_respondidas %}
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-check-circle me-2"></i>
-                                        {% if mostrar_respondidas %}Responder Novamente{% else %}Responder{% endif %}
+                                       Responder
                                     </button>
                                 {% endif %}
 
@@ -326,71 +353,57 @@
 .comentario:hover .btn-danger {
     opacity: 1;
 }
+
+.card-title {
+    margin-bottom: 1rem;
+    color: var(--bs-primary);
+}
+
+.form-control {
+    border-radius: 0.375rem;
+}
+
+.btn-primary {
+    border-radius: 0.375rem;
+}
 </style>
 
 <script>
-function handleComentarioSubmit(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const questaoId = form.dataset.questaoId;
-    const textarea = form.querySelector('textarea[name="comentario"]');
-    const texto = textarea.value.trim();
-    
-    if (!texto) return false;
-    
-    // Desabilitar o form durante o envio
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.disabled = true;
-    
-    // Enviar comentário
-    fetch(`/questoes/questao/${questaoId}/comentario/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-            'comentario': texto,
-            'csrfmiddlewaretoken': form.querySelector('[name=csrfmiddlewaretoken]').value
+    function handleComentarioSubmit(event) {
+        event.preventDefault();
+        const form = event.target;
+        const questaoId = form.dataset.questaoId;
+        const texto = form.querySelector('textarea[name="texto"]').value.trim();
+        
+        if (!texto) return false;
+        
+        fetch(`/questoes/adicionar_comentario/${questaoId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'texto': texto,
+                'csrfmiddlewaretoken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Adicionar novo comentário à timeline
-            const timelineDiv = document.querySelector(`#comentarios-questao-${questaoId}`);
-            timelineDiv.insertAdjacentHTML('afterbegin', data.html);
-            
-            // Limpar e reabilitar o form
-            textarea.value = '';
-            
-            // Atualizar contador de comentários
-            const badge = form.closest('.comentarios-section').querySelector('.badge');
-            const currentCount = parseInt(badge.textContent);
-            badge.textContent = currentCount + 1;
-            
-            // Mostrar mensagem de sucesso
-            alert(data.message);
-        } else {
-            alert(data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Erro:', error);
-        alert('Erro ao enviar comentário. Tente novamente.');
-    })
-    .finally(() => {
-        submitBtn.disabled = false;
-    });
-}
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload(); // Refresh the page
+            }else {
+                alert(data.message);
+            }
+        });
+    }
 
 function deletarComentario(comentarioId) {
     if (!confirm('Tem certeza que deseja deletar este comentário?')) {
         return;
     }
     
-    fetch(`/questoes/comentario/${comentarioId}/deletar/`, {
+    fetch(`/questoes/deletar_comentario/${comentarioId}/`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,

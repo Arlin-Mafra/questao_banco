@@ -260,7 +260,7 @@ def responder_questoes(request):
 @login_required
 def adicionar_comentario(request, questao_id):
     if request.method == 'POST':
-        texto = request.POST.get('comentario')
+        texto = request.POST.get('texto')
         if texto:
             try:
                 comentario = ComentarioQuestao.objects.create(
@@ -268,10 +268,11 @@ def adicionar_comentario(request, questao_id):
                     usuario=request.user,
                     texto=texto
                 )
-                
-                html = render_to_string('questoes/includes/comentario.html', 
+                html = render_to_string('questoes/includes/comentario.html',
                                       {'comentario': comentario},
                                       request=request)
+                
+                messages.success(request, 'Comentário adicionado com sucesso!')
                 
                 return JsonResponse({
                     'status': 'success',
@@ -279,11 +280,13 @@ def adicionar_comentario(request, questao_id):
                     'message': 'Comentário adicionado com sucesso!'
                 })
             except Exception as e:
+                messages.error(request, f'Erro ao adicionar comentário: {str(e)}')
                 return JsonResponse({
                     'status': 'error',
                     'message': f'Erro ao adicionar comentário: {str(e)}'
                 })
         else:
+            messages.warning(request, 'O texto do comentário não pode estar vazio.')
             return JsonResponse({
                 'status': 'error',
                 'message': 'O texto do comentário não pode estar vazio.'
@@ -293,6 +296,7 @@ def adicionar_comentario(request, questao_id):
         'status': 'error',
         'message': 'Método não permitido.'
     })
+
 
 @login_required
 def deletar_comentario(request, comentario_id):

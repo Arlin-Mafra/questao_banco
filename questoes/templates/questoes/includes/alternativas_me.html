@@ -1,10 +1,11 @@
 {% with mc=questao.questaomultiplaescolha %}
 <div class="alternativas">
     <!-- Alternativa A -->
-    <div class="form-check mb-2 {% if questao.respondida %}
-        {% if 'A' == mc.gabarito %}resposta-correta{% endif %}
-        {% if 'A' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
-    {% endif %}">
+    <div class="form-check mb-2 
+        {% if questao.respondida and not mostrar_respondidas %} %}
+            {% if 'A' == mc.gabarito %}resposta-correta{% endif %}
+            {% if 'A' == questao.resposta_usuario and questao.status == 'incorreta' %}resposta-incorreta{% endif %}
+        {% endif %}">
         <input class="form-check-input" type="radio" 
                name="resposta_{{ questao.id }}" 
                value="A" 
